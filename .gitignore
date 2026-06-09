@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# py2app build output (regenerate with: python3 setup.py py2app -A)
+build/
+dist/
+
+# macOS
+.DS_Store
+
+# Preview tooling (local dev only)
+.claude/
