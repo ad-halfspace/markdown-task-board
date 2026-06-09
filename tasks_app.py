@@ -227,6 +227,9 @@ class AppDelegate(NSObject):
             self.win_wv = make_webview(WIN_W, WIN_H, URL + "?window")
             self.win_wv.setAutoresizingMask_(VIEW_W_SIZABLE | VIEW_H_SIZABLE)
             win.contentView().addSubview_(self.win_wv)
+            # Remember the window's size + position across relaunches: Cocoa saves
+            # the frame to user defaults and restores it here when it exists.
+            win.setFrameAutosaveName_("TaskBoardFloatingWindow")
             self.window = win
         else:
             try: self.win_wv.evaluateJavaScript_completionHandler_("typeof refreshTasks==='function'&&refreshTasks()", None)

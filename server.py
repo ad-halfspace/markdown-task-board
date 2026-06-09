@@ -374,6 +374,15 @@ def doc_payload(f):
     }
 
 
+def strip_related_section(body):
+    """Drop a "## Related" (or ###) section from the displayed notes. The board
+    surfaces relations structurally (Linked in the brain / Related tasks), so a
+    hand-written Related list in the body would be redundant. Links inside it are
+    still scanned for the structured sections; only the rendered body hides it."""
+    return re.sub(r"^\s*#{2,3}\s+related\s*$.*?(?=^\s*#{1,6}\s|\Z)", "",
+                  body, flags=re.IGNORECASE | re.MULTILINE | re.DOTALL).rstrip()
+
+
 def task_detail(f):
     content = f.read_text(encoding="utf-8")
     fm = parse_frontmatter(content)
@@ -383,8 +392,8 @@ def task_detail(f):
     d["updated"] = fm.get("updated")
     d["category"] = fm.get("category")
     body = strip_leading_heading(body_after_fm(content))
-    d["body_html"] = md_to_html(body)
-    d["body_raw"] = body.strip()      # editable notes (heading stripped)
+    d["body_html"] = md_to_html(strip_related_section(body))   # hide a hand-written ## Related
+    d["body_raw"] = body.strip()      # editable notes keep the full body
     seen, links = set(), []
 
     def add(r):

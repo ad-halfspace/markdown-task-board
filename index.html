@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tasks</title>
 <style>
+
 :root {
   --bg:#000; --s1:#0d0d0d; --s2:#141414; --s3:#1c1c1c; --s4:#262626;
   --border:#222; --border2:#2c2c2c;
@@ -39,9 +40,7 @@ body.light {
 body.light .dchip.pri1 { color:var(--red); }
 body.light .btn-save { color:#fff; }
 * { box-sizing:border-box; margin:0; padding:0; }
-/* Uses Britti Sans if it's installed on your machine; otherwise falls back to a
-   system font. The font files are not bundled (licensed) — see README to swap fonts. */
-body { font-family:'Britti Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text);
+body { font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text);
   min-height:100vh; padding:1.6rem 2rem; max-width:1180px; margin:0 auto; line-height:1.5; }
 ::-webkit-scrollbar { width:7px; height:7px; } ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
@@ -606,8 +605,6 @@ applyTheme((() => { try { return localStorage.getItem('tb-theme') || 'dark'; } c
 // ── Privacy toggle, persisted ──
 (() => { try { const v = localStorage.getItem('tb-show-private'); if (v === '0') { showPrivate = false; document.getElementById('privacy-toggle').classList.add('active'); } } catch {} })();
 
-// the floating window loads with ?window — only there do we show the description subtitles
-if (/(\?|&)window\b/.test(location.search)) document.body.classList.add('show-desc');
 
 // Lightweight data refresh — re-fetches tasks without resetting any UI state
 // (filters, grouping, layout, search, scroll position all preserved).
@@ -1346,31 +1343,23 @@ function renderDetail(d, bodyLabel){
   } else if(d.body_html && d.body_html.trim()){
     h += `<div class="drawer-section-lbl">${bodyLabel||'Notes'}</div><div class="md-body">${d.body_html}</div>`;
   }
-  // task views: topics (tags) + related tasks
+  // task views: topics (tags)
   if(d.slug){
     const tags = d.tags || [];
     if(tags.length){
       h += `<div class="drawer-section-lbl">Topics</div><div class="tag-row">` +
         tags.map(tg => `<button class="tag-chip" data-tag="${esc(tg)}">#${esc(tg)}</button>`).join('') + `</div>`;
     }
-    const rel = relatedTasks(d);
-    if(rel.length){
-      rel.sort((a,b) => (a.status==='done') - (b.status==='done') || critRank(a) - critRank(b));
-      h += `<div class="drawer-section-lbl">Related tasks (${rel.length})</div>`;
-      for(const r of rel){
-        h += `<button class="rel-task ${r.status==='done'?'done':''}" data-slug="${r.slug}">
-          ${statusIcon(r.status,12)}<span class="rel-title">${esc(r.title)}</span><span class="rel-meta">${esc(r.project ? projLabel(r.project) : areaLabel(r.area))}</span>
-        </button>`;
-      }
-    }
   }
-  const links = (d.links||[]).filter(l => l.kind!=='other' || l.summary);
+  // linked brain pages (project / docs / people / sources) — shown before related tasks.
+  // Tasks are excluded here; they belong in the "Related tasks" section below.
+  const links = (d.links||[]).filter(l => l.kind!=='task' && (l.kind!=='other' || l.summary));
   if(links.length){
-    const groups = { project:[], doc:[], person:[], source:[], task:[], other:[] };
+    const groups = { project:[], doc:[], person:[], source:[], other:[] };
     links.forEach(l => (groups[l.kind]||groups.other).push(l));
-    const titles = { project:'Project', doc:'Documents', person:'People', source:'Sources', task:'Linked tasks', other:'Other links' };
+    const titles = { project:'Project', doc:'Documents', person:'People', source:'Sources', other:'Other links' };
     h += `<div class="drawer-section-lbl">Linked in the brain</div>`;
-    for(const k of ['project','doc','person','source','task','other']){
+    for(const k of ['project','doc','person','source','other']){
       for(const l of groups[k]){
         h += `<div class="brain-card ${l.exists?'':'missing'}" ${l.exists?`data-target="${esc(l.target)}"`:''}>
           <div class="bc-head">
@@ -1380,6 +1369,25 @@ function renderDetail(d, bodyLabel){
           </div>
           ${l.summary?`<div class="bc-summary">${esc(l.summary)}</div>`:(l.exists?'':'<div class="bc-summary">not found in brain</div>')}
         </div>`;
+      }
+    }
+  }
+  // related tasks (task views only) — after the linked brain pages
+  if(d.slug){
+    const rel = relatedTasks(d);
+    // also fold in tasks explicitly wiki-linked from the body (e.g. an old ## Related list)
+    (d.links||[]).filter(l => l.kind==='task').forEach(l => {
+      const slug = l.target.split('/').pop().replace(/\.md$/,'');
+      const t = taskBySlug(slug);
+      if(t && t.slug!==d.slug && !rel.some(r => r.slug===t.slug)) rel.push(t);
+    });
+    if(rel.length){
+      rel.sort((a,b) => (a.status==='done') - (b.status==='done') || critRank(a) - critRank(b));
+      h += `<div class="drawer-section-lbl">Related tasks (${rel.length})</div>`;
+      for(const r of rel){
+        h += `<button class="rel-task ${r.status==='done'?'done':''}" data-slug="${r.slug}">
+          ${statusIcon(r.status,12)}<span class="rel-title">${esc(r.title)}</span><span class="rel-meta">${esc(r.project ? projLabel(r.project) : areaLabel(r.area))}</span>
+        </button>`;
       }
     }
   }
