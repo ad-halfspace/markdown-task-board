@@ -1355,17 +1355,19 @@ function renderDetail(d, bodyLabel){
   // Tasks are excluded here; they belong in the "Related tasks" section below.
   const links = (d.links||[]).filter(l => l.kind!=='task' && (l.kind!=='other' || l.summary));
   if(links.length){
-    const groups = { project:[], doc:[], person:[], source:[], other:[] };
+    const groups = { project:[], doc:[], file:[], person:[], source:[], other:[] };
     links.forEach(l => (groups[l.kind]||groups.other).push(l));
-    const titles = { project:'Project', doc:'Documents', person:'People', source:'Sources', other:'Other links' };
+    const titles = { project:'Project', doc:'Documents', file:'Files', person:'People', source:'Sources', other:'Other links' };
     h += `<div class="drawer-section-lbl">Linked in the brain</div>`;
-    for(const k of ['project','doc','person','source','other']){
+    for(const k of ['project','doc','file','person','source','other']){
       for(const l of groups[k]){
-        h += `<div class="brain-card ${l.exists?'':'missing'}" ${l.exists?`data-target="${esc(l.target)}"`:''}>
+        // 'file' = external attachment (OneDrive deck, local PDF…): open it, don't navigate the drawer into it
+        const navTarget = (l.exists && l.kind!=='file') ? `data-target="${esc(l.target)}"` : '';
+        h += `<div class="brain-card ${l.exists?'':'missing'}" ${navTarget}>
           <div class="bc-head">
             <span class="bc-kind ${l.kind}">${titles[l.kind]||l.kind}</span>
             <span class="bc-title">${esc(l.title)}</span>
-            ${l.exists?`<button class="bc-open" data-open="${esc(l.target)}" title="Open ${isMd(l.target)?'in Obsidian':'in app'}"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M4.5 2H2v8h8V7.5M7 2h3v3M10 2L5 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`:''}
+            ${l.exists?`<button class="bc-open" data-open="${esc(l.target)}" title="Open ${(l.kind==='file'||!isMd(l.target))?'in app':'in Obsidian'}"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M4.5 2H2v8h8V7.5M7 2h3v3M10 2L5 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`:''}
           </div>
           ${l.summary?`<div class="bc-summary">${esc(l.summary)}</div>`:(l.exists?'':'<div class="bc-summary">not found in brain</div>')}
         </div>`;

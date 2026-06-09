@@ -409,6 +409,31 @@ def task_detail(f):
 
     for mt in re.finditer(r"\[\[([^\]]+)\]\]", body):
         add(resolve_wikilink(mt.group(1)))
+
+    # Markdown links to files — surface attachments the notes point at (OneDrive /
+    # SharePoint decks, local PDFs, etc.) as openable cards, not just inline text.
+    for mt in re.finditer(r"\[([^\]]+)\]\(([^)]+)\)", body):
+        text, url = mt.group(1).strip(), mt.group(2).strip()
+        low = url.split("?")[0].split("#")[0].lower()
+        is_file = (low.startswith("file://")
+                   or any(low.endswith(e) for e in OPEN_OK_EXT)
+                   or "sharepoint.com" in url.lower() or "1drv.ms" in url.lower())
+        if not is_file or url in seen:
+            continue
+        seen.add(url)
+        ext = low.rsplit(".", 1)[-1] if "." in low.rsplit("/", 1)[-1] else ""
+        type_label = {"pptx": "PowerPoint", "ppt": "PowerPoint", "pdf": "PDF",
+                      "docx": "Word", "doc": "Word", "xlsx": "Excel", "xls": "Excel",
+                      "png": "Image", "jpg": "Image", "jpeg": "Image", "gif": "Image",
+                      "key": "Keynote", "numbers": "Numbers", "pages": "Pages",
+                      "csv": "CSV", "txt": "Text"}.get(ext, (ext.upper() + " file") if ext else "File")
+        u = url.lower()
+        loc = ("OneDrive" if ("onedrive" in u or "1drv.ms" in u) else
+               "SharePoint" if "sharepoint" in u else
+               "Web" if u.startswith("http") else "Local file")
+        links.append({"kind": "file", "target": url, "title": text or url.split("/")[-1],
+                      "summary": f"{type_label} · {loc}", "exists": True, "resolved": None})
+
     d["links"] = links
     return d
 
@@ -574,6 +599,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if path == "/api/open":
             data = self.read_json()
             target = data.get("target", "")
+            # explicit URLs the user put in their own notes (file:// or web) — hand
+            # straight to `open`, which launches the right app (PowerPoint, browser…).
+            if target.lower().startswith(("file://", "http://", "https://")):
+                subprocess.Popen(["open", target])
+                print(f"  Opened URL {target}")
+                self.send_json(200, {"opened": True, "app": "default app",
+                                     "file": urllib.parse.unquote(target.split("/")[-1])})
+                return
             f = find_open_file(target)
             if not f or f.suffix.lower() not in OPEN_OK_EXT:
                 self.send_json(404, {"opened": False, "target": target}); return
