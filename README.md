@@ -64,6 +64,26 @@ your Markdown files  ──►  server.py (stdlib HTTP + JSON API)  ──►  i
   of truth, so edits made here appear in your editor (and Obsidian) and vice
   versa.
 
+## How I use it
+
+This is just how the author works with it day to day; use whatever fits you.
+
+The combo that clicks is **Claude + the board + Obsidian**, each doing what it's
+best at:
+
+- **Creating tasks → an assistant.** Most tasks get created by chatting with a
+  Claude Code assistant rather than by filling in fields. It's good at
+  categorizing, inferring what a task relates to, and setting sensible due dates,
+  far less friction than a form. (This is an assistant workflow, not part of the
+  app itself.)
+- **The board → overview + status.** The daily driver: see everything at a glance,
+  tick things off, and move status. The thing a plain notes app doesn't give you
+  is the satisfaction of actually checking something off.
+- **Obsidian → details.** Jump in only when you want the full context behind a
+  task.
+- In practice almost nothing is typed into Obsidian by hand; tasks flow in from
+  the assistant and just show up on the board.
+
 ## Task file format
 
 Each task is one Markdown file. Only `type: task` and a `# Title` are really
