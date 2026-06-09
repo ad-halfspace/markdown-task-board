@@ -9,6 +9,8 @@ No database, no build step, no accounts, and nothing leaves your machine: the
 server is pure Python standard library (binds to `127.0.0.1` only) and the UI is
 a single HTML file.
 
+> **New here?** Follow the [Easy setup guide](SETUP.md), a 5-minute, no-experience-needed walkthrough.
+
 ## Features
 
 - **List and Kanban views** of the same tasks, switchable.
