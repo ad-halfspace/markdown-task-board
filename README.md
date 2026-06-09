@@ -126,6 +126,33 @@ This works as a companion view for an Obsidian vault:
 Because tasks are plain Markdown files, edits made in the board show up in
 Obsidian and vice-versa, there is no separate database.
 
+## Capturing tasks from your phone
+
+The board runs locally on your computer (`localhost`), so it isn't reachable
+from your phone directly. But since every task is just a Markdown file in a
+folder, there are easy ways to capture on the go and have items show up on the
+board when you're back:
+
+- **Obsidian mobile (simplest):** if your tasks folder is in a synced Obsidian
+  vault, add or edit a task `.md` from the Obsidian app on your phone. It syncs,
+  and the board picks it up on the next refresh.
+- **Inbox-note sweep (zero-friction capture):** keep one "inbox" note in an app
+  that syncs to your phone (e.g. Apple Notes) and jot a line whenever a thought
+  hits you. A small automation then reads that note, classifies each new line
+  (task / event / note), and writes the task files for you, deduping against
+  what already exists. Because tasks are plain files, any script can do this.
+
+  The reference implementation is a Claude Code skill called **`/scribbles`**: it
+  sweeps an Apple Note named `Scribbles`, turns each new line into a task file
+  (inferring sensible due dates and project links from context), files pure notes
+  separately, and remembers what it already processed so it never duplicates. It
+  isn't bundled here, it depends on a notes integration and an assistant, but the
+  pattern is simple to reproduce: *read a synced note → diff against last run →
+  write `.md` task files.*
+
+This closes the "no access from my phone" gap: capture anywhere on mobile, and
+the tasks are waiting on the board when you're back at your computer.
+
 ## The macOS app
 
 `tasks_app.py` wraps the same web UI in a native menu-bar popover plus an

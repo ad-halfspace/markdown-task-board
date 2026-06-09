@@ -124,6 +124,15 @@ opens it directly in Obsidian. See the README's *Use with Obsidian* section.
 
 ---
 
+## Capture tasks from your phone (optional)
+
+The board only runs on your computer, so it isn't reachable from your phone. But
+because tasks are just Markdown files, you can still capture on the go: edit the
+files from **Obsidian mobile** if your folder syncs, or keep a synced "inbox"
+note (e.g. Apple Notes) that an automation sweeps into task files for you. The
+reference implementation of that sweep is the `/scribbles` Claude Code skill, see
+the README's *Capturing tasks from your phone* section for details.
+
 ## Get the macOS menu-bar app (optional, Mac only)
 
 If you'd like a one-click menu-bar icon and a floating window instead of a
