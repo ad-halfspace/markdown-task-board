@@ -159,6 +159,14 @@ starts the server for you if it isn't already running.
 `criticality = priorityWeight + dueWeight` → Critical (≥5) / Elevated (≥3) / Normal.
 Priority: P1=3 P2=2 P3=1. Due: overdue/today/tomorrow=3, ≤3d=2, ≤7d=1, else 0.
 
+## Fonts
+
+The UI prefers **Britti Sans** if that font is installed on your system, and
+otherwise falls back to your platform's default UI font. No font files are
+bundled (Britti Sans is a licensed typeface). To use a different font, edit the
+`font-family` on the `body` rule near the top of `index.html`, e.g. add a Google
+Font `<link>` and set the family there.
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
