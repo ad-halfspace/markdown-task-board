@@ -142,13 +142,17 @@ board when you're back:
   (task / event / note), and writes the task files for you, deduping against
   what already exists. Because tasks are plain files, any script can do this.
 
-  The reference implementation is a Claude Code skill called **`/scribbles`**: it
-  sweeps an Apple Note named `Scribbles`, turns each new line into a task file
-  (inferring sensible due dates and project links from context), files pure notes
-  separately, and remembers what it already processed so it never duplicates. It
-  isn't bundled here, it depends on a notes integration and an assistant, but the
-  pattern is simple to reproduce: *read a synced note → diff against last run →
-  write `.md` task files.*
+  The reference implementation is **`/scribbles`**, a custom Claude Code skill by
+  [Amalie Dam](https://github.com/ad-halfspace): it sweeps an Apple Note named
+  `Scribbles`, turns each new line into a task file (inferring sensible due dates
+  and project links from context), files pure notes separately, and remembers
+  what it already processed so it never duplicates. It isn't bundled in this repo
+  (it depends on a notes integration and an assistant), so either **ask Amalie for
+  a copy** (open an issue on this repo) or **build your own**: point an assistant
+  or a small script at a note that syncs to your phone, and on each run
+  (1) read the note, (2) diff against a saved snapshot to find new lines,
+  (3) classify each as task / event / note, and (4) write a task `.md` for the
+  actionable ones and update the snapshot.
 
 This closes the "no access from my phone" gap: capture anywhere on mobile, and
 the tasks are waiting on the board when you're back at your computer.
