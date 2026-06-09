@@ -21,11 +21,39 @@ task-board/
 └── "Task Board.command"  # double-click launcher
 ```
 
-By default `server.py` looks for tasks in `<vault>/agent_brain/tasks/` and
-projects in `<vault>/agent_brain/projects/`, resolving the vault root three
-levels up from the script (`Path(__file__).resolve().parents[2]`). Drop this
-folder at `<vault>/workspace/task-board/`, or edit the path constants at the top
-of `server.py` to point anywhere you like.
+### Where it reads tasks from
+
+The paths are set by a few constants at the top of `server.py`:
+
+```python
+ROOT         = Path(__file__).resolve().parents[2]   # vault / project root
+BRAIN        = ROOT / "agent_brain"
+TASKS_DIR    = BRAIN / "tasks"                        # *.md task files live here
+PROJECTS_DIR = BRAIN / "projects"                     # one folder per project hub
+```
+
+So out of the box it expects to live at `<root>/workspace/task-board/` with
+tasks in `<root>/agent_brain/tasks/`. Either match that layout, or edit the
+constants to point `TASKS_DIR` / `PROJECTS_DIR` at any folders you like.
+
+## Use with Obsidian
+
+This works as a companion view for an [Obsidian](https://obsidian.md) vault:
+
+1. Put this folder inside your vault, e.g. `<vault>/workspace/task-board/`, and
+   keep your task `.md` files in `<vault>/agent_brain/tasks/` (or repoint the
+   constants above).
+2. On startup `server.py` detects the vault automatically: the root is treated
+   as an Obsidian vault if it contains a `.obsidian` folder.
+3. When detected, the **Open** action on a linked file opens Markdown notes
+   straight in Obsidian via the `obsidian://open?vault=…&file=…` URI; other file
+   types (PDF, PPTX, images, …) open in their native app.
+4. `[[wiki-links]]` in a task's notes resolve the same way Obsidian resolves
+   them (by path, with a vault-wide basename fallback), and render as clickable
+   links in the detail drawer.
+
+Because tasks are plain Markdown files, edits made in the board show up in
+Obsidian and vice-versa, there is no separate database.
 
 ## Task file format
 

@@ -11,7 +11,7 @@ BRAIN = ROOT / "agent_brain"
 TASKS_DIR = BRAIN / "tasks"
 PROJECTS_DIR = BRAIN / "projects"
 ARTIFACTS_DIR = ROOT / "artifacts"
-WEB_DIR = Path(__file__).resolve().parent   # web assets (index.html, fonts/) live with the code
+WEB_DIR = Path(__file__).resolve().parent   # web assets (index.html) live with the code
 PORT = 3737
 
 # Obsidian vault = nearest ancestor with a .obsidian folder (here: the project root)
