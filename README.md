@@ -1,25 +1,94 @@
 # Task Board
 
-A local, dependency-free task board for a folder of Markdown task files. It
-reads and writes Markdown files with YAML frontmatter and renders them as an
-interactive board: list and kanban views, grouping (due date / criticality /
-status / area / priority), a detail drawer that resolves `[[wiki-links]]`, and
-an optional macOS menu-bar + floating-window app. Works great on top of an
-Obsidian vault.
+A local, dependency-free task board for a folder of Markdown files. Point it at
+a directory of `.md` task files (with YAML frontmatter) and it renders them as
+an interactive board, then writes your edits straight back to the files. Great
+as a companion view for an [Obsidian](https://obsidian.md) vault.
 
-No frameworks, no build step for the web UI: the server is pure Python stdlib
-and the UI is a single HTML file.
+No database, no build step, no accounts, and nothing leaves your machine: the
+server is pure Python standard library (binds to `127.0.0.1` only) and the UI is
+a single HTML file.
 
-## Layout
+## Features
+
+- **List and Kanban views** of the same tasks, switchable.
+- **Grouping** by due date, criticality, status, area, or priority.
+- **Filters** for status, priority, area, and topic, plus a quick-find search.
+- **Criticality** scoring that combines priority and due-date urgency.
+- **Dependencies**: a task can depend on another and auto-blocks until it's done.
+- **Detail drawer** that renders a task's notes and resolves `[[wiki-links]]` to
+  other notes, the project hub, and source documents.
+- **Create / edit / delete / complete** tasks in the UI; changes are saved to the
+  underlying Markdown files immediately.
+- **Optional macOS app**: a menu-bar icon plus an always-on-top floating window.
+- **Light and dark themes**, remembered across sessions.
+
+## Requirements
+
+- **Python 3.7+** (uses only the standard library) for the web server.
+- Any modern **web browser**.
+- *Optional, for the macOS menu-bar app only:* macOS 11+, a framework build of
+  Python, and the pyobjc + py2app packages (see [The macOS app](#the-macos-app)).
+
+## Quick start
+
+```bash
+git clone https://github.com/ad-halfspace/markdown-task-board.git
+cd markdown-task-board
+python3 server.py
+```
+
+Then open <http://localhost:3737> in your browser. By default the board looks
+for task files in `../../agent_brain/tasks/` relative to `server.py` (see
+[Where it reads tasks from](#where-it-reads-tasks-from) to change that). If the
+folder is empty the board simply shows no tasks, add one with **+ Add task** or
+drop a `.md` file in (format below).
+
+## How it works
 
 ```
-task-board/
-├── server.py        # local HTTP server + JSON API over the task files
-├── index.html       # the board UI (single file: HTML + CSS + JS)
-├── tasks_app.py     # macOS menu-bar popover + floating window (pyobjc/WebKit)
-├── setup.py         # py2app config to build the .app
-└── "Task Board.command"  # double-click launcher
+your Markdown files  ──►  server.py (stdlib HTTP + JSON API)  ──►  index.html (board UI)
+   agent_brain/tasks/*.md        localhost:3737                    one file: HTML+CSS+JS
+        ▲                                                                  │
+        └──────────────────  writes edits back to the files  ◄────────────┘
 ```
+
+- `server.py` is a small local HTTP server. On each request it reads the task
+  `.md` files fresh, parses their frontmatter, and returns JSON; on create/edit it
+  rewrites the corresponding file (keeping the frontmatter and your notes).
+- `index.html` is the whole front end, a single file with no framework. It calls
+  the JSON API and renders the board client-side.
+- There is **no database and no cache**: the Markdown files are the single source
+  of truth, so edits made here appear in your editor (and Obsidian) and vice
+  versa.
+
+## Task file format
+
+Each task is one Markdown file. Only `type: task` and a `# Title` are really
+required; everything else is optional.
+
+```yaml
+---
+type: task
+summary: "Short one-liner shown under the title"
+status: open | in_progress | on_hold | blocked | done | dropped
+priority: p0 | p1 | p2 | p3
+due: 2026-06-15          # optional, real deadlines only
+area: projects | adhoc | social | personal | development
+project: my-project      # optional, links to a project hub (see below)
+depends_on: other-task   # optional, auto-blocks this task until other-task is done
+tags: [task, topic-a, topic-b]
+---
+
+# Task title
+
+Free-form notes in Markdown. `[[wiki-links]]` to other notes resolve and become
+clickable in the detail drawer.
+```
+
+A **project** is a folder under `projects/` containing a hub file named after the
+folder (e.g. `projects/my-project/my-project.md`). Tasks reference it by slug via
+the `project:` field, and the board links back to the hub.
 
 ### Where it reads tasks from
 
@@ -38,7 +107,7 @@ constants to point `TASKS_DIR` / `PROJECTS_DIR` at any folders you like.
 
 ## Use with Obsidian
 
-This works as a companion view for an [Obsidian](https://obsidian.md) vault:
+This works as a companion view for an Obsidian vault:
 
 1. Put this folder inside your vault, e.g. `<vault>/workspace/task-board/`, and
    keep your task `.md` files in `<vault>/agent_brain/tasks/` (or repoint the
@@ -55,42 +124,24 @@ This works as a companion view for an [Obsidian](https://obsidian.md) vault:
 Because tasks are plain Markdown files, edits made in the board show up in
 Obsidian and vice-versa, there is no separate database.
 
-## Task file format
+## The macOS app
 
-Each task is a Markdown file with frontmatter:
+`tasks_app.py` wraps the same web UI in a native menu-bar popover plus an
+always-on-top floating window, so the board is one click away. It needs a
+*framework* build of Python (the python.org installer, or `brew install
+python`) with pyobjc:
 
-```yaml
----
-type: task
-summary: "Short one-liner"
-status: open | in_progress | on_hold | blocked | done | dropped
-priority: p0 | p1 | p2 | p3
-due: 2026-06-15        # optional
-area: projects | adhoc | social | personal | development
-project: my-project    # optional, links to a project hub
-depends_on: other-task # optional, auto-blocks until that task is done
-tags: [task, topic-a, topic-b]
----
-
-# Task title
-
-Notes in Markdown. `[[wiki-links]]` to other files resolve in the drawer.
-```
-
-## Run
-
-Web only (any browser):
-```
-python3 server.py        # then open http://localhost:3737
-```
-
-Menu-bar / floating-window app (macOS, needs a framework Python with pyobjc):
-```
+```bash
 pip install pyobjc-core pyobjc-framework-Cocoa pyobjc-framework-WebKit py2app
-python3 setup.py py2app -A
+python3 setup.py py2app -A      # -A = alias mode: fast, references files in place
 open dist/Tasks.app
 ```
-or just double-click **Task Board.command**.
+
+After building once you can just double-click **Task Board.command**. The app
+starts the server for you if it isn't already running.
+
+> Note: `tasks_app.py` has a `#!` line pointing at a specific framework Python.
+> Adjust it to your own framework Python path if you run the script directly.
 
 ## API (server.py)
 
@@ -110,4 +161,4 @@ Priority: P1=3 P2=2 P3=1. Due: overdue/today/tomorrow=3, ≤3d=2, ≤7d=1, else 
 
 ## License
 
-MIT.
+MIT, see [LICENSE](LICENSE).
